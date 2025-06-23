@@ -50,7 +50,7 @@
       .then(data => {
         document.getElementById('location').textContent = `🏋️ ${data.name}`;
         document.getElementById('current').textContent = `${data.current} people`;
-        document.getElementById('percent').textContent = `${data.percentageUsed}% of ${data.max_capacity} capacity`;
+        document.getElementById('percent').textContent = `${data.percentageUsed.toFixed(1)}% of ${data.max_capacity} capacity`;
       })
       .catch(err => {
         document.getElementById('location').textContent = "Unable to load";
