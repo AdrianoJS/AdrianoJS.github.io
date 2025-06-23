@@ -17,7 +17,7 @@
       border-radius: 12px;
       padding: 2rem;
       max-width: 360px;
-      margin: 0 auto;
+      margin: 0 auto 1rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     h1 {
@@ -33,6 +33,22 @@
       color: #666;
       font-size: 1rem;
     }
+    .timeline {
+      text-align: left;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+    .interval {
+      background: white;
+      margin-bottom: 0.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .interval strong {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
   </style>
 </head>
 <body>
@@ -42,10 +58,18 @@
     <div id="percent" class="capacity">--</div>
   </div>
 
-  <script>
-    const corsUrl = 'https://corsproxy.io/?https://visits.evofitness.no/api/v1/locations/a310dd55-afa4-4b85-a1aa-e165235f3de0/current';
+  <div class="timeline" id="timeline">
+    <h2>Estimated Busiest Times</h2>
+    <div id="intervals">Loading...</div>
+  </div>
 
-    fetch(corsUrl)
+  <script>
+    const baseId = 'a310dd55-afa4-4b85-a1aa-e165235f3de0';
+    const proxy = 'https://corsproxy.io/?';
+    const baseURL = `https://visits.evofitness.no/api/v1/locations/${baseId}`;
+
+    // Fetch current status
+    fetch(`${proxy}${baseURL}/current`)
       .then(res => res.json())
       .then(data => {
         document.getElementById('location').textContent = `🏋️ ${data.name}`;
@@ -56,6 +80,32 @@
         document.getElementById('location').textContent = "Unable to load";
         document.getElementById('current').textContent = "--";
         document.getElementById('percent').textContent = "Try again later.";
+        console.error(err);
+      });
+
+    // Fetch timeline
+    fetch(`${proxy}${baseURL}/timeline`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('intervals');
+        container.innerHTML = '';
+        const capacity = 35; // known actual gym capacity
+
+        data.intervals.forEach(interval => {
+          const div = document.createElement('div');
+          div.className = 'interval';
+
+          const estimatedPeople = Math.round((interval.percentageUsed / 100) * capacity);
+          div.innerHTML = `
+            <strong>${interval.name}</strong>
+            ${interval.percentageUsed.toFixed(1)}% → ~${estimatedPeople} people
+            <br><small>Status: ${interval.status}</small>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        document.getElementById('intervals').innerHTML = "Unable to load timeline.";
         console.error(err);
       });
   </script>
